@@ -157,10 +157,37 @@ async function stakeCHC() {
   }
 }
 
-document.getElementById("connectWallet").addEventListener("click", connectWallet);
-document.getElementById("approveCHC").addEventListener("click", approveCHC);
-document.getElementById("stakeButton").addEventListener("click", stakeCHC);
+async function approveCHC() {
+  const amount = document.getElementById("stakeAmount").value;
+  const statusMessage = document.getElementById("statusMessage");
 
-if (web3Modal.cachedProvider) {
-  connectWallet();
+  if (!amount || amount <= 0) {
+    statusMessage.innerText = "❌ Please enter a valid amount.";
+    return;
+  }
+
+  const amountInWei = BigInt(amount * 1e9).toString();
+
+  try {
+    statusMessage.innerText = "⏳ Approving CHC...";
+
+    await chcToken.methods
+      .approve(STAKING_CONTRACT_ADDRESS, amountInWei)
+      .send({ from: selectedAccount })
+      .on("transactionHash", (hash) => {
+        console.log("Approval TX hash:", hash);
+        statusMessage.innerText = "🕒 Approval pending... TX: " + hash;
+      })
+      .on("receipt", (receipt) => {
+        console.log("Approval success:", receipt);
+        statusMessage.innerText = "✅ CHC Approved!";
+      })
+      .on("error", (error) => {
+        console.error("Approval failed:", error);
+        statusMessage.innerText = "❌ Approval failed. See console for details.";
+      });
+  } catch (err) {
+    console.error("General error during approval:", err);
+    statusMessage.innerText = "❌ Approval error.";
+  }
 }
