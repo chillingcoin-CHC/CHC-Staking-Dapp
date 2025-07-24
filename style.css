@@ -1,34 +1,61 @@
 body {
-  background: #111;
-  color: #eee;
-  font-family: 'Segoe UI', sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
+  background-color: #121212;
+  color: #e0e0e0;
+  font-family: Arial, sans-serif;
   margin: 0;
-}
-.container {
+  padding: 0;
   text-align: center;
-  background: #1c1c1c;
-  padding: 30px;
-  border-radius: 10px;
-  width: 90%;
+}
+
+.container {
   max-width: 500px;
+  margin: 60px auto;
+  padding: 20px;
+  background-color: #1e1e1e;
+  border-radius: 12px;
+  box-shadow: 0 0 12px rgba(0,0,0,0.5);
 }
-button {
-  margin: 10px;
-  padding: 10px 20px;
-  background: #00c2ff;
-  border: none;
-  color: white;
-  font-size: 16px;
-  border-radius: 5px;
-  cursor: pointer;
-}
-input {
-  margin: 10px;
+
+input[type="number"] {
   padding: 10px;
+  margin: 10px 0;
   width: 80%;
+  border-radius: 5px;
+  border: none;
   font-size: 16px;
+}
+
+button {
+  padding: 10px 20px;
+  margin: 8px;
+  border: none;
+  border-radius: 6px;
+  background-color: #00bcd4;
+  color: #fff;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+button:hover {
+  background-color: #0097a7;
+}
+
+footer {
+  margin-top: 20px;
+  font-size: 14px;
+  color: #aaa;
+}
+
+a {
+  color: #00bcd4;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+#statusMessage {
+  margin-top: 15px;
+  font-weight: bold;
 }
