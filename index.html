@@ -4,31 +4,43 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>CHC Staking dApp</title>
-  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Web3 and Web3Modal -->
   <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
-  <script src="https://unpkg.com/web3modal"></script>
-  <script src="https://unpkg.com/evm-chains"></script>
-  <script src="https://unpkg.com/@walletconnect/web3-provider"></script>
+  <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
+  <script src="https://unpkg.com/web3modal@1.9.12/dist/index.js"></script>
 </head>
 <body>
   <div class="container">
-    <h1>🐧 CHC Staking</h1>
-    <button id="connectWallet">Connect Wallet</button>
-    <div id="walletAddress"></div>
+    <h1>🧊 CHC Staking</h1>
+    
+    <button id="connectWallet">🔌 Connect Wallet</button>
+    <p><strong>Wallet:</strong> <span id="walletAddress">Not Connected</span></p>
+    <p><strong>CHC Balance:</strong> <span id="chcBalance">0</span> CHC</p>
 
-    <h2>Your CHC Balance: <span id="chcBalance">0</span></h2>
+    <hr/>
 
-    <div class="staking-options">
-      <h3>Choose Staking Tier:</h3>
-      <label><input type="radio" name="stakeOption" value="14"> Chill Stake (14 days)</label><br>
-      <label><input type="radio" name="stakeOption" value="30"> Deep Chill (30 days)</label>
+    <label for="stakeAmount">Stake Amount (CHC):</label>
+    <input type="number" id="stakeAmount" placeholder="e.g. 5000000" min="0"/>
+
+    <div class="stake-options">
+      <label><input type="radio" name="stakeOption" value="14" /> Chill Stake (14 days)</label><br/>
+      <label><input type="radio" name="stakeOption" value="30" /> Deep Chill (30 days)</label>
     </div>
 
-    <input type="number" id="stakeAmount" placeholder="Enter CHC amount to stake">
-    <button id="approveCHC">Approve CHC</button>
-    <button id="stakeButton">Stake CHC</button>
+    <button id="approveCHC">✅ Approve CHC</button>
+    <button id="stakeButton">📥 Stake CHC</button>
 
-    <div id="statusMessage"></div>
+    <p id="statusMessage"></p>
+
+    <footer>
+      <p>
+        🔗 <a href="https://chillingcoin.com" target="_blank">chillingcoin.com</a> |
+        🐧 <a href="https://t.me/Chillingcoinbsc0" target="_blank">Telegram</a> |
+        ✖️ <a href="https://x.com/chillingchc" target="_blank">X/Twitter</a>
+      </p>
+    </footer>
   </div>
 
   <script src="app.js"></script>
