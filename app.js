@@ -161,18 +161,19 @@ async function approveCHC() {
   const amount = document.getElementById("stakeAmount").value;
   const statusMessage = document.getElementById("statusMessage");
 
-  if (!amount || amount <= 0) {
-    statusMessage.innerText = "❌ Please enter a valid amount.";
+  if (!amount || isNaN(amount) || amount <= 0) {
+    statusMessage.innerText = "❌ Please enter a valid CHC amount.";
     return;
   }
 
-  const amountInWei = BigInt(amount * 1e9).toString();
+  const decimals = await tokenContract.methods.decimals().call();
+  const amountInWei = web3.utils.toBN(amount * (10 ** decimals));
 
   try {
     statusMessage.innerText = "⏳ Approving CHC...";
 
-    await chcToken.methods
-      .approve(STAKING_CONTRACT_ADDRESS, amountInWei)
+    await tokenContract.methods
+      .approve(stakingAddress, amountInWei)
       .send({ from: selectedAccount })
       .on("transactionHash", (hash) => {
         console.log("Approval TX hash:", hash);
@@ -184,10 +185,10 @@ async function approveCHC() {
       })
       .on("error", (error) => {
         console.error("Approval failed:", error);
-        statusMessage.innerText = "❌ Approval failed. See console for details.";
+        statusMessage.innerText = "❌ Approval failed. See console.";
       });
   } catch (err) {
-    console.error("General error during approval:", err);
+    console.error("General approval error:", err);
     statusMessage.innerText = "❌ Approval error.";
   }
 }
