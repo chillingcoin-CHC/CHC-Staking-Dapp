@@ -1,19 +1,12 @@
-const tokenAddress = "0xc50e66bca472da61d0184121e491609b774e2c37"; // CHC token
-const stakingAddress = "0xa5E6F40Bd1D16d21Aeb5e89AEE50f307fc4eA0b3"; // CHC Staking
-
-// Web3 + Contracts
-let web3, provider, web3Modal, selectedAccount;
-let tokenContract, stakingContract;
-
-// Token ABI (CHC)
+// ==== CHC Token ABI ====
 const tokenABI = [
   { "constant": true, "inputs": [], "name": "name", "outputs": [{ "name": "", "type": "string" }], "type": "function" },
   { "constant": false, "inputs": [{ "name": "spender", "type": "address" }, { "name": "value", "type": "uint256" }], "name": "approve", "outputs": [{ "name": "", "type": "bool" }], "type": "function" },
   { "constant": true, "inputs": [], "name": "decimals", "outputs": [{ "name": "", "type": "uint8" }], "type": "function" },
-  { "constant": true, "inputs": [{ "name": "account", "type": "address" }], "name": "balanceOf", "outputs": [{ "name": "", "type": "uint256" }], "type": "function" },
+  { "constant": true, "inputs": [{ "name": "account", "type": "address" }], "name": "balanceOf", "outputs": [{ "name": "", "type": "uint256" }], "type": "function" }
 ];
 
-// Staking Contract ABI
+// ==== Staking Contract ABI ====
 const stakingABI = [
   {
     "inputs": [
@@ -46,154 +39,103 @@ const stakingABI = [
   }
 ];
 
-// Web3Modal Setup
-async function initWeb3Modal() {
-  const providerOptions = {
+const CHC_TOKEN_ADDRESS = "0xc50e66bca472da61d0184121e491609b774e2c37";
+const STAKING_CONTRACT_ADDRESS = "0xa5E6F40Bd1D16d21Aeb5e89AEE50f307fc4eA0b3";
+
+let web3, provider, selectedAccount, tokenContract, stakingContract;
+
+const web3Modal = new window.Web3Modal.default({
+  cacheProvider: true,
+  providerOptions: {
     walletconnect: {
       package: window.WalletConnectProvider.default,
       options: {
         rpc: {
-          56: "https://bsc-dataseed.binance.org/"
+          56: "https://bsc-dataseed.binance.org"
         },
         chainId: 56
       }
     }
-  };
+  }
+});
 
-  web3Modal = new window.Web3Modal.default({
-    cacheProvider: true,
-    providerOptions
-  });
+document.getElementById("connectWallet").addEventListener("click", connectWallet);
+document.getElementById("approveCHC").addEventListener("click", approveCHC);
+document.getElementById("stakeButton").addEventListener("click", stakeCHC);
+
+if (web3Modal.cachedProvider) {
+  connectWallet();
 }
 
-// Connect Wallet
 async function connectWallet() {
   try {
     provider = await web3Modal.connect();
     web3 = new Web3(provider);
-
     const accounts = await web3.eth.getAccounts();
     selectedAccount = accounts[0];
-
     document.getElementById("walletAddress").innerText = selectedAccount;
 
-    tokenContract = new web3.eth.Contract(tokenABI, tokenAddress);
-    stakingContract = new web3.eth.Contract(stakingABI, stakingAddress);
+    tokenContract = new web3.eth.Contract(tokenABI, CHC_TOKEN_ADDRESS);
+    stakingContract = new web3.eth.Contract(stakingABI, STAKING_CONTRACT_ADDRESS);
 
-    checkCHCBalance();
-
-    provider.on("accountsChanged", (accounts) => {
-      selectedAccount = accounts[0];
-      document.getElementById("walletAddress").innerText = selectedAccount;
-      checkCHCBalance();
-    });
-
-    provider.on("chainChanged", (chainId) => {
-      if (parseInt(chainId, 16) !== 56) {
-        alert("Please switch to Binance Smart Chain");
-      }
-    });
-  } catch (error) {
-    console.error("Wallet connection failed:", error);
-  }
-}
-
-// Check CHC Balance
-async function checkCHCBalance() {
-  try {
     const balance = await tokenContract.methods.balanceOf(selectedAccount).call();
-    const decimals = await tokenContract.methods.decimals().call();
-    const formatted = parseFloat(balance / (10 ** decimals)).toLocaleString();
-    document.getElementById("chcBalance").innerText = formatted;
+    document.getElementById("chcBalance").innerText = (balance / 1e18).toLocaleString();
+
+    const chainId = await web3.eth.getChainId();
+    if (chainId !== 56) {
+      alert("Please switch to Binance Smart Chain (BSC)");
+    }
   } catch (error) {
-    console.error("Balance error:", error);
+    console.error("Wallet connect error:", error);
+    document.getElementById("statusMessage").innerText = "❌ Wallet connection failed.";
   }
 }
 
-// Approve CHC for staking
 async function approveCHC() {
-  const amount = document.getElementById("stakeAmount").value;
-  const statusMessage = document.getElementById("statusMessage");
-
-  if (!amount || isNaN(amount) || amount <= 0) {
-    statusMessage.innerText = "❌ Please enter a valid CHC amount.";
-    return;
-  }
-
-  const decimals = await tokenContract.methods.decimals().call();
-  const amountInWei = web3.utils.toBN(amount * (10 ** decimals));
-
   try {
-    statusMessage.innerText = "⏳ Approving CHC...";
+    const amount = document.getElementById("stakeAmount").value;
+    if (!amount || isNaN(amount) || amount <= 0) {
+      return alert("Enter a valid CHC amount.");
+    }
 
-    await tokenContract.methods
-      .approve(stakingAddress, amountInWei)
-      .send({ from: selectedAccount })
-      .on("transactionHash", (hash) => {
-        console.log("Approval TX:", hash);
-        statusMessage.innerText = "🕒 Approval pending... TX: " + hash;
-      })
-      .on("receipt", (receipt) => {
-        statusMessage.innerText = "✅ CHC Approved!";
-      })
-      .on("error", (error) => {
-        statusMessage.innerText = "❌ Approval failed. Check console.";
-        console.error("Approval failed:", error);
-      });
-  } catch (err) {
-    statusMessage.innerText = "❌ Approval error.";
-    console.error("Approval error:", err);
+    const weiAmount = web3.utils.toWei(amount, "ether");
+
+    const tx = await tokenContract.methods
+      .approve(STAKING_CONTRACT_ADDRESS, weiAmount)
+      .send({ from: selectedAccount });
+
+    if (tx.status) {
+      document.getElementById("statusMessage").innerText = "✅ CHC Approved Successfully!";
+    } else {
+      document.getElementById("statusMessage").innerText = "❌ Approval failed.";
+    }
+  } catch (error) {
+    console.error("Approval error:", error);
+    document.getElementById("statusMessage").innerText = "❌ Approval transaction failed.";
   }
 }
 
-// Stake CHC
 async function stakeCHC() {
-  const amount = document.getElementById("stakeAmount").value;
-  const selectedTier = document.querySelector('input[name="stakeOption"]:checked');
-  const statusMessage = document.getElementById("statusMessage");
-
-  if (!amount || isNaN(amount) || amount <= 0 || !selectedTier) {
-    statusMessage.innerText = "❌ Enter valid CHC amount and choose tier.";
-    return;
-  }
-
-  const lockDays = parseInt(selectedTier.value);
-  const decimals = await tokenContract.methods.decimals().call();
-  const amountInWei = web3.utils.toBN(amount * (10 ** decimals));
-
   try {
-    statusMessage.innerText = "⏳ Sending stake transaction...";
+    const amount = document.getElementById("stakeAmount").value;
+    const selectedTier = document.querySelector('input[name="stakeOption"]:checked');
+    if (!selectedTier) return alert("Choose a staking tier.");
+    if (!amount || isNaN(amount) || amount <= 0) return alert("Enter a valid stake amount.");
 
-    await stakingContract.methods
-      .stake(amountInWei, lockDays)
-      .send({ from: selectedAccount })
-      .on("transactionHash", (hash) => {
-        console.log("Stake TX:", hash);
-        statusMessage.innerText = "🕒 Stake pending... TX: " + hash;
-      })
-      .on("receipt", (receipt) => {
-        statusMessage.innerText = "✅ CHC Staked successfully!";
-        checkCHCBalance();
-      })
-      .on("error", (error) => {
-        statusMessage.innerText = "❌ Stake failed. Check console.";
-        console.error("Stake failed:", error);
-      });
-  } catch (err) {
-    statusMessage.innerText = "❌ Stake error.";
-    console.error("Stake error:", err);
+    const days = parseInt(selectedTier.value);
+    const weiAmount = web3.utils.toWei(amount, "ether");
+
+    const tx = await stakingContract.methods
+      .stake(weiAmount, days)
+      .send({ from: selectedAccount });
+
+    if (tx.status) {
+      document.getElementById("statusMessage").innerText = "✅ Stake successful!";
+    } else {
+      document.getElementById("statusMessage").innerText = "❌ Stake failed.";
+    }
+  } catch (error) {
+    console.error("Stake error:", error);
+    document.getElementById("statusMessage").innerText = "❌ Staking transaction failed.";
   }
 }
-
-// Initialize app
-window.addEventListener("load", async () => {
-  await initWeb3Modal();
-
-  document.getElementById("connectWallet").addEventListener("click", connectWallet);
-  document.getElementById("approveCHC").addEventListener("click", approveCHC);
-  document.getElementById("stakeButton").addEventListener("click", stakeCHC);
-
-  if (web3Modal.cachedProvider) {
-    connectWallet();
-  }
-});
