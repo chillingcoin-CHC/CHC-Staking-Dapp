@@ -35,7 +35,7 @@ Welcome to the official **CHC Staking DApp**, where holders of **ChillingCoin (C
 ## 🧰 Smart Contracts
 
 - **CHC Token Contract**: [`0xc50e66bca472da61d0184121e491609b774e2c37`](https://bscscan.com/token/0xc50e66bca472da61d0184121e491609b774e2c37)
-- **Staking Contract**: _[0xa5E6F40Bd1D16d21Aeb5e89AEE50f307fc4eA0b3" ] // CHC Staking
+- **Staking Contract**: _[ 0xa5E6F40Bd1D16d21Aeb5e89AEE50f307fc4eA0b3 ] CHC Staking
 
 ---
 
